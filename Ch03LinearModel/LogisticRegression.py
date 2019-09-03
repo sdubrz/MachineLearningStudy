@@ -11,7 +11,7 @@ Label = [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 (m, n) = Data.shape
 X = np.concatenate((Data, np.ones((1, n))), axis=0)
 beta = np.random.random((m+1, 1))
-thresold = 0.0001
+thresold = 0.001
 value_list = []  # 每次迭代的目标函数值
 
 
@@ -20,8 +20,8 @@ def l_value(beta):
     num = 0
     for i in range(0, n):
         temp = np.dot(np.transpose(beta), X[:, i])
-        num = num - Label[i]*temp + np.log(1+np.exp(temp))
-    return num[0]
+        num = num - Label[i]*temp[0] + np.log(1+np.exp(temp[0]))
+    return num
 
 
 def logistic_regression(beta):
@@ -33,7 +33,9 @@ def logistic_regression(beta):
         second_d = np.zeros((m+1, m+1))
 
         for i in range(0, n):
-            p1 = np.exp(np.dot(np.transpose(beta), X[:, i])) / (1+np.exp(np.dot(np.transpose(beta), X[:, i])))
+            temp = np.dot(np.transpose(beta), X[:, i])
+            print(temp)
+            p1 = np.exp(temp) / (1+np.exp(temp))
             first_d = first_d - X[:, i]*(Label[i]-p1)
             second_d = second_d + np.outer(X[:, i], np.transpose(X[:, i]))*p1*(1-p1)
 
@@ -41,7 +43,7 @@ def logistic_regression(beta):
         this_value = l_value(beta)
         value_list.append(this_value)
 
-        if last_value - this_value < thresold:
+        if abs(last_value - this_value) < thresold:
             break
 
         last_value = this_value
@@ -49,12 +51,12 @@ def logistic_regression(beta):
     test_label = []
     for i in range(0, n):
         temp = np.dot(np.transpose(beta), X[:, i])
-        if temp[0] > 0.5:
-            test_label.append(1)
-        else:
+        if temp[0] > 0:
             test_label.append(0)
-    print(Label)
-    print(test_label)
+        else:
+            test_label.append(1)
+    # print(Label)
+    # print(test_label)
 
     for i in range(0, n):
         color = 'c'
