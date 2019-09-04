@@ -4,6 +4,41 @@ import math
 from Ch04DecisionTree import Dataset
 
 
+class TreeNode:
+    """
+    决策树结点类
+    """
+    current_index = 0
+
+    def __init__(self, parent=None, attr_name=None, children=None, judge=None, split=None, data_index=None, attr_value=None):
+        """
+        决策树结点类初始化方法
+        :param parent: 父节点
+        """
+        self.parent = parent  # 父节点，根节点的父节点为 None
+        self.attribute_name = attr_name  # 本节点上进行划分的属性名
+        self.attribute_value = attr_value  # 本节点上划分属性的值，是与父节点的划分属性名相对应的
+        self.children = children  # 孩子结点列表
+        self.judge = judge  # 如果是叶子结点，需要给出判断
+        self.split = split  # 如果是使用连续属性进行划分，需要给出分割点
+        self.data_index = data_index  # 对应训练数据集的训练索引号
+        self.index = TreeNode.current_index  # 当前结点的索引号，方便输出时查看
+        TreeNode.current_index += 1
+
+    def set_children(self, children_list):
+        self.children = children_list
+
+
+def is_number(s):
+    """判断一个字符串是否为数字"""
+    try:
+        float(s)
+        return True
+    except ValueError:
+        pass
+    return False
+
+
 def ent(labels):
     """
     样本集合的信息熵
@@ -44,7 +79,6 @@ def gain(attribute, labels, is_value=False):
 
     if is_value:
         # 属性值是连续的数值，首先应该使用二分法寻找最佳分割点
-        print("应该使用连续的方法")
         sorted_attribute = attribute.copy()
         sorted_attribute.sort()
         split = []  # 候选的分隔点
@@ -86,14 +120,63 @@ def gain(attribute, labels, is_value=False):
     return info_gain, split_value
 
 
+def finish_node(current_node, data, label, rest_title):
+    """
+    完成当前结点的后续计算，包括选择属性，划分子节点等
+    :param current_node: 当前的结点
+    :param data: 数据集
+    :param label: 数据集的 label
+    :param rest_title: 剩余的可用属性名
+    :return:
+    """
+    n = len(label)
+
+    # 判断当前结点的数据是否属于同一类，如果是，直接标记为叶子结点并返回
+    one_class = True
+    for i in label:
+        for j in label:
+            if i != j:
+                one_class = False
+                break
+            if not one_class:
+                break
+    if one_class:
+        current_node.judge = label[0]
+        return
+
+    title_gain = {}
+    for title in rest_title:
+        attr_values = []
+        current_label = []
+        for index in current_node.data_index:
+            this_data = data[index]
+            attr_values.append(this_data[title])
+            current_label.append(label[index])
+        temp_data = data[0]
+        this_gain = gain(attr_values, current_label, is_number(temp_data[title]))  # 如果属性值为数字，则认为是连续的
+        title_gain[title] = this_gain
+
+    best_attr = max(title_gain, key=title_gain.get)  # 信息增益最大的属性名
+
+
+
+
 def id3_tree(Data, title, label):
     """
     id3方法构造决策树，使用的标准是信息增益（信息熵）
-    :param Data: 数据集，每个样本是一个 list
+    :param Data: 数据集，每个样本是一个 dict(属性名：属性值)，整个 Data 是个大的 list
     :param title: 每个属性的名字，如 色泽、含糖率等
     :param label: 存储的是每个样本的类别
     :return:
     """
+    n = len(Data)
+    root_node = TreeNode()  # 根节点
+    rest_title = title.copy()
+
+    root_data = []
+    for i in range(0, n):
+        root_data.append(i)
+    root_node.data_index = root_data
 
 
 def test():
