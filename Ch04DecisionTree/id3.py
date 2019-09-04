@@ -10,7 +10,8 @@ class TreeNode:
     """
     current_index = 0
 
-    def __init__(self, parent=None, attr_name=None, children=None, judge=None, split=None, data_index=None, attr_value=None):
+    def __init__(self, parent=None, attr_name=None, children=None, judge=None, split=None, data_index=None,
+                 attr_value=None, rest_attribute=None):
         """
         决策树结点类初始化方法
         :param parent: 父节点
@@ -23,10 +24,25 @@ class TreeNode:
         self.split = split  # 如果是使用连续属性进行划分，需要给出分割点
         self.data_index = data_index  # 对应训练数据集的训练索引号
         self.index = TreeNode.current_index  # 当前结点的索引号，方便输出时查看
+        self.rest_attribute = rest_attribute  # 尚未使用的属性列表
         TreeNode.current_index += 1
 
-    def set_children(self, children_list):
-        self.children = children_list
+    def to_string(self):
+        """用一个字符串来描述当前结点信息"""
+        this_string = 'current index : ' + str(self.index) + ";\n"
+        if not (self.parent is None):
+            parent_node = self.parent
+            this_string = this_string + 'parent index : ' + str(parent_node.index) + ";\n"
+            this_string = this_string + parent_node.attr_name + " : " + self.attribute_value + ";\n"
+        this_string = this_string + str(self.data_index) + ";\n"
+        if not(self.children is None):
+            child_list = []
+            for child in self.children:
+                child_list.append(child.index)
+            this_string = this_string + 'children : ' + str(child_list)
+        if not (self.judge is None):
+            this_string = this_string + 'label : ' + self.judge
+        return this_string
 
 
 def is_number(s):
@@ -120,7 +136,7 @@ def gain(attribute, labels, is_value=False):
     return info_gain, split_value
 
 
-def finish_node(current_node, data, label, rest_title):
+def finish_node(current_node, data, label):
     """
     完成当前结点的后续计算，包括选择属性，划分子节点等
     :param current_node: 当前的结点
@@ -144,7 +160,21 @@ def finish_node(current_node, data, label, rest_title):
         current_node.judge = label[0]
         return
 
-    title_gain = {}
+    rest_title = current_node.rest_attribute  # 候选属性
+    if len(rest_title) == 0:  # 如果候选属性为空，则是个叶子结点。需要选择最多的那个类作为该结点的类
+        label_count = {}
+        temp_data = current_node.data_index
+        for index in temp_data:
+            if label_count.__contains__(label[index]):
+                label_count[label[index]] += 1
+            else:
+                label_count[label[index]] = 1
+        final_label = max(label_count)
+        current_node.judge = final_label
+        return
+
+    title_gain = {}  # 记录每个属性的信息增益
+    title_split_value = {}  # 记录每个属性的分隔值，如果是连续属性则为分隔值，如果是离散属性则为None
     for title in rest_title:
         attr_values = []
         current_label = []
@@ -153,12 +183,53 @@ def finish_node(current_node, data, label, rest_title):
             attr_values.append(this_data[title])
             current_label.append(label[index])
         temp_data = data[0]
-        this_gain = gain(attr_values, current_label, is_number(temp_data[title]))  # 如果属性值为数字，则认为是连续的
+        this_gain, this_split_value = gain(attr_values, current_label, is_number(temp_data[title]))  # 如果属性值为数字，则认为是连续的
         title_gain[title] = this_gain
+        title_split_value[title] = this_split_value
 
     best_attr = max(title_gain, key=title_gain.get)  # 信息增益最大的属性名
+    current_node.split = title_split_value[best_attr]
+    rest_title.remove(best_attr)
 
+    a_data = data[0]
+    if is_number(a_data[best_attr]):  # 如果是该属性的值为连续数值
+        split_value = title_split_value[best_attr]
+        small_data = []
+        large_data = []
+        for index in current_node.data_index:
+            this_data = data[index]
+            if this_data[best_attr] <= split_value:
+                small_data.append(index)
+            else:
+                large_data.append(index)
+        small_str = '<=' + str(split_value)
+        large_str = '>' + str(split_value)
+        small_child = TreeNode(parent=current_node, data_index=small_data, attr_value=small_str,
+                               rest_attribute=rest_title.copy())
+        large_child = TreeNode(parent=current_node, data_index=large_data, attr_value=large_str,
+                               rest_attribute=rest_title.copy())
+        current_node.children = [small_child, large_child]
 
+    else:  # 如果该属性的值是离散值
+        best_titlevalue_dict = {}  # key是属性值的取值，value是个list记录所包含的样本序号
+        for index in current_node.data_index:
+            this_data = data[index]
+            if best_titlevalue_dict.__contains__(this_data[best_attr]):
+                temp_list = best_titlevalue_dict[this_data[best_attr]]
+                temp_list.append(index)
+            else:
+                temp_list = [index]
+                best_titlevalue_dict[this_data[best_attr]] = temp_list
+
+        children_list = []
+        for key, index_list in best_titlevalue_dict.items():
+            a_child = TreeNode(parent=current_node, data_index=index_list, attr_value=key,
+                               rest_attribute=rest_title.copy())
+            children_list.append(a_child)
+        current_node.children = children_list
+
+    for child in current_node.children:  # 递归
+        finish_node(child, data, label)
 
 
 def id3_tree(Data, title, label):
@@ -170,13 +241,29 @@ def id3_tree(Data, title, label):
     :return:
     """
     n = len(Data)
-    root_node = TreeNode()  # 根节点
     rest_title = title.copy()
-
     root_data = []
     for i in range(0, n):
         root_data.append(i)
-    root_node.data_index = root_data
+
+    root_node = TreeNode(data_index=root_data, rest_attribute=title.copy())
+
+
+def print_tree(root=TreeNode()):
+    """
+    打印输出一颗树
+    :param root: 根节点
+    :return:
+    """
+    node_list = [root]
+    while(len(node_list)>0):
+        current_node = node_list.pop()
+        print('--------------------------------------------')
+        print(current_node.to_string())
+        print('--------------------------------------------')
+        children_list = current_node.children
+        for child in children_list:
+            node_list.append(child)
 
 
 def test():
@@ -203,6 +290,18 @@ def run_test():
     print(split1)
     print(gain2)
     print(split2)
+
+    str1 = 'heelp' + str(2009)
+    print(str1)
+
+    adict = {}
+    adict['a'] = [1, 2, 3, 4, 5]
+    b = adict['a']
+    b.append(9)
+    print('b', b)
+    print('dict[a]', adict['a'])
+    b.remove(3)
+    print(adict['a'])
 
 
 if __name__ == '__main__':
