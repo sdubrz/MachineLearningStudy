@@ -33,8 +33,8 @@ class TreeNode:
         if not (self.parent is None):
             parent_node = self.parent
             this_string = this_string + 'parent index : ' + str(parent_node.index) + ";\n"
-            this_string = this_string + parent_node.attr_name + " : " + self.attribute_value + ";\n"
-        this_string = this_string + str(self.data_index) + ";\n"
+            this_string = this_string + str(parent_node.attribute_name) + " : " + str(self.attribute_value) + ";\n"
+        this_string = this_string + "data : " + str(self.data_index) + ";\n"
         if not(self.children is None):
             child_list = []
             for child in self.children:
@@ -94,6 +94,7 @@ def gain(attribute, labels, is_value=False):
     split_value = None  # 如果是连续值的话，也需要返回分隔界限的值
 
     if is_value:
+        # print('attribute', attribute)
         # 属性值是连续的数值，首先应该使用二分法寻找最佳分割点
         sorted_attribute = attribute.copy()
         sorted_attribute.sort()
@@ -102,7 +103,7 @@ def gain(attribute, labels, is_value=False):
             temp = (sorted_attribute[i] + sorted_attribute[i+1]) / 2
             split.append(temp)
         info_gain_list = []
-        print('split', split)
+        # print('split', split)
         for temp_split in split:
             low_labels = []
             high_labels = []
@@ -114,7 +115,7 @@ def gain(attribute, labels, is_value=False):
             temp_gain = info_gain - len(low_labels)/n*ent(low_labels) - len(high_labels)/n*ent(high_labels)
             info_gain_list.append(temp_gain)
 
-        print('info_gain_list', info_gain_list)
+        # print('info_gain_list', info_gain_list)
         info_gain = max(info_gain_list)
         max_index = info_gain_list.index(info_gain)
         split_value = split[max_index]
@@ -151,16 +152,24 @@ def finish_node(current_node, data, label):
 
     # 判断当前结点的数据是否属于同一类，如果是，直接标记为叶子结点并返回
     one_class = True
-    for i in label:
-        for j in label:
-            if i != j:
+    this_label = []
+    this_data_index = current_node.data_index
+    for i in this_data_index:
+        for j in this_data_index:
+            if label[i] != label[j]:
                 one_class = False
                 break
-            if not one_class:
-                break
+        if not one_class:
+            break
     if one_class:
+        print('属于同一类')
         current_node.judge = label[0]
         return
+
+    # 下面是为了debug临时定义的一些变量
+    temp_current_node_index = current_node.index
+    temp_current_data = current_node.data_index
+    # 上面是为了debug临时定义的一些变量
 
     rest_title = current_node.rest_attribute  # 候选属性
     if len(rest_title) == 0:  # 如果候选属性为空，则是个叶子结点。需要选择最多的那个类作为该结点的类
@@ -190,6 +199,7 @@ def finish_node(current_node, data, label):
         title_split_value[title] = this_split_value
 
     best_attr = max(title_gain, key=title_gain.get)  # 信息增益最大的属性名
+    current_node.attribute_name = best_attr
     current_node.split = title_split_value[best_attr]
     rest_title.remove(best_attr)
 
@@ -230,6 +240,7 @@ def finish_node(current_node, data, label):
             children_list.append(a_child)
         current_node.children = children_list
 
+    print(current_node.to_string())
     for child in current_node.children:  # 递归
         finish_node(child, data, label)
 
@@ -267,8 +278,9 @@ def print_tree(root=TreeNode()):
         print(current_node.to_string())
         print('--------------------------------------------')
         children_list = current_node.children
-        for child in children_list:
-            node_list.append(child)
+        if not (children_list is None):
+            for child in children_list:
+                node_list.append(child)
 
 
 def test():
