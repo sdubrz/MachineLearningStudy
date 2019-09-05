@@ -102,6 +102,7 @@ def gain(attribute, labels, is_value=False):
             temp = (sorted_attribute[i] + sorted_attribute[i+1]) / 2
             split.append(temp)
         info_gain_list = []
+        print('split', split)
         for temp_split in split:
             low_labels = []
             high_labels = []
@@ -113,6 +114,7 @@ def gain(attribute, labels, is_value=False):
             temp_gain = info_gain - len(low_labels)/n*ent(low_labels) - len(high_labels)/n*ent(high_labels)
             info_gain_list.append(temp_gain)
 
+        print('info_gain_list', info_gain_list)
         info_gain = max(info_gain_list)
         max_index = info_gain_list.index(info_gain)
         split_value = split[max_index]
@@ -247,6 +249,9 @@ def id3_tree(Data, title, label):
         root_data.append(i)
 
     root_node = TreeNode(data_index=root_data, rest_attribute=title.copy())
+    finish_node(root_node, Data, label)
+
+    return root_node
 
 
 def print_tree(root=TreeNode()):
@@ -276,32 +281,20 @@ def test():
 
 def run_test():
     watermelon, title, title_full = Dataset.watermelon3()
-    color = []
-    density = []
-    labels = []
+
+    # 先处理数据结构
+    data = []  # 存放数据
+    label = []  # 存放标签
     for melon in watermelon:
-        color.append(melon[0])
-        density.append(melon[6])
-        labels.append(melon[8])
-    gain1, split1 = gain(color, labels, is_value=False)
-    gain2, split2 = gain(density, labels, is_value=True)
+        a_dict = {}
+        dim = len(melon) - 1
+        for i in range(0, dim):
+            a_dict[title[i]] = melon[i]
+        data.append(a_dict)
+        label.append(melon[dim])
 
-    print(gain1)
-    print(split1)
-    print(gain2)
-    print(split2)
-
-    str1 = 'heelp' + str(2009)
-    print(str1)
-
-    adict = {}
-    adict['a'] = [1, 2, 3, 4, 5]
-    b = adict['a']
-    b.append(9)
-    print('b', b)
-    print('dict[a]', adict['a'])
-    b.remove(3)
-    print(adict['a'])
+    decision_tree = id3_tree(data, title, label)
+    print_tree(decision_tree)
 
 
 if __name__ == '__main__':
