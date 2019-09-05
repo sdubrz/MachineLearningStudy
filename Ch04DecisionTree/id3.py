@@ -1,5 +1,4 @@
-import numpy as np
-import matplotlib.pyplot as plt
+
 import math
 from Ch04DecisionTree import Dataset
 
@@ -36,6 +35,7 @@ class TreeNode:
             this_string = this_string + str(parent_node.attribute_name) + " : " + str(self.attribute_value) + ";\n"
         this_string = this_string + "data : " + str(self.data_index) + ";\n"
         if not(self.children is None):
+            this_string = this_string + 'select attribute is : ' + str(self.attribute_name) + ";\n"
             child_list = []
             for child in self.children:
                 child_list.append(child.index)
@@ -152,7 +152,7 @@ def finish_node(current_node, data, label):
 
     # 判断当前结点的数据是否属于同一类，如果是，直接标记为叶子结点并返回
     one_class = True
-    this_label = []
+
     this_data_index = current_node.data_index
     for i in this_data_index:
         for j in this_data_index:
@@ -162,14 +162,8 @@ def finish_node(current_node, data, label):
         if not one_class:
             break
     if one_class:
-        print('属于同一类')
-        current_node.judge = label[0]
+        current_node.judge = label[this_data_index[0]]
         return
-
-    # 下面是为了debug临时定义的一些变量
-    temp_current_node_index = current_node.index
-    temp_current_data = current_node.data_index
-    # 上面是为了debug临时定义的一些变量
 
     rest_title = current_node.rest_attribute  # 候选属性
     if len(rest_title) == 0:  # 如果候选属性为空，则是个叶子结点。需要选择最多的那个类作为该结点的类
@@ -240,7 +234,7 @@ def finish_node(current_node, data, label):
             children_list.append(a_child)
         current_node.children = children_list
 
-    print(current_node.to_string())
+    # print(current_node.to_string())
     for child in current_node.children:  # 递归
         finish_node(child, data, label)
 
@@ -273,7 +267,7 @@ def print_tree(root=TreeNode()):
     """
     node_list = [root]
     while(len(node_list)>0):
-        current_node = node_list.pop()
+        current_node = node_list[0]
         print('--------------------------------------------')
         print(current_node.to_string())
         print('--------------------------------------------')
@@ -281,14 +275,36 @@ def print_tree(root=TreeNode()):
         if not (children_list is None):
             for child in children_list:
                 node_list.append(child)
+        node_list.remove(current_node)
 
 
-def test():
-    a = [1, 3, 6, 7, 4, 8, 0, 7]
-    b = a.copy()
-    b.sort()
-    print(b)
-    print(a)
+def evaluation(root=TreeNode(), true_labels=[]):
+    """
+    计算决策树在训练数据集上的分类正确率
+    :param root: 决策树的根节点
+    :param true_labels: 训练数据集的
+    :return:
+    """
+    node_list = [root]
+    n = len(true_labels)
+    count = 0
+
+    while(len(node_list)>0):
+        current_node = node_list[0]
+        children_list = current_node.children
+
+        if not (children_list is None):
+            for child in children_list:
+                node_list.append(child)
+
+        if not (current_node.judge is None):
+            for index in current_node.data_index:
+                if current_node.judge == true_labels[index]:
+                    count += 1
+
+        node_list.remove(current_node)
+
+    return count / n
 
 
 def run_test():
@@ -307,6 +323,8 @@ def run_test():
 
     decision_tree = id3_tree(data, title, label)
     print_tree(decision_tree)
+    accuracy = evaluation(root=decision_tree, true_labels=label)
+    print('正确率是：'+str(accuracy*100)+"%")
 
 
 if __name__ == '__main__':
