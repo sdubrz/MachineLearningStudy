@@ -145,7 +145,6 @@ def finish_node(current_node, data, label):
     :param current_node: 当前的结点
     :param data: 数据集
     :param label: 数据集的 label
-    :param rest_title: 剩余的可用属性名
     :return:
     """
     n = len(label)
