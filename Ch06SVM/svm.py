@@ -15,4 +15,5 @@ def svm(X, label, C, kernel='linear'):
     (n, m) = X.shape
 
 
-def smo()
+def smo():
+    print('smo算法')
