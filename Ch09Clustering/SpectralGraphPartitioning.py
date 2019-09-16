@@ -3,4 +3,10 @@
 import numpy as np
 
 
+def spectral_graph_part(W, k):
+    """
 
+    :param W:
+    :param k:
+    :return:
+    """
