@@ -4,6 +4,7 @@ import random
 
 from sklearn import datasets
 import matplotlib.pyplot as plt
+from Tools import ConvexHull
 
 
 class K_means:
@@ -70,8 +71,8 @@ def test():
     用具体的数据进行测试
     :return:
     """
-    iris = datasets.load_iris()
-    X0 = iris.data
+    wine = datasets.load_wine()
+    X0 = wine.data
     (n, dim) = X0.shape
     X = X0[:, 0:2]
     k = 3
@@ -89,6 +90,22 @@ def test():
     for i in range(0, k):
         plt.scatter(center[i, 0], center[i, 1], marker='+', c=colors[i], s=120)
 
+    clusters = []
+    for i in range(0, k):
+        temp_list = []
+        clusters.append(temp_list)
+    for i in range(0, n):
+        temp_list = clusters[int(y[i])]
+        temp_list.append(X[i, :])
+
+    for i in range(0, k):
+        convex = ConvexHull.graham_scan(clusters[i])
+        length = len(convex)
+        for j in range(0, length-1):
+            plt.plot([convex[j][0], convex[j+1][0]], [convex[j][1], convex[j+1][1]], c=colors[i], alpha=0.7)
+        plt.plot([convex[0][0], convex[length-1][0]], [convex[0][1], convex[length-1][1]], c=colors[i], alpha=0.7)
+
+    plt.title('k-means')
     plt.show()
 
 

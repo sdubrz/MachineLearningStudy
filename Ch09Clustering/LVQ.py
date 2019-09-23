@@ -3,6 +3,10 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 
+from sklearn import datasets
+from scipy.spatial import Voronoi
+from Tools.VoronoiPlot import voronoi_plot_2d
+
 
 class LVQ:
     def __init__(self, X, y, k, eta=0.05, max_inter=3000):
@@ -54,3 +58,37 @@ class LVQ:
     def fit(self):
         self.run(self.X, self.y, self.k, eta=self.eta)
         return self.center_point
+
+
+def test():
+    """
+    用具体的数据进行测试
+    :return:
+    """
+    wine = datasets.load_wine()
+    X0 = wine.data
+    y = wine.target
+    (n, dim) = X0.shape
+    X = X0[:, 0:2]
+    k = 3
+
+    lvq = LVQ(X, y, k)
+    centers = lvq.fit()
+    print(centers)
+
+    colors = ['b', 'g', 'r', 'c']
+
+    vol = Voronoi(centers)
+    fig = voronoi_plot_2d(vol, data_points=X)
+
+    for i in range(0, n):
+        plt.scatter(X[i, 0], X[i, 1], c=colors[y[i]])
+
+    for i in range(0, k):
+        plt.scatter(centers[i, 0], centers[i, 1], marker='+', c=colors[i], s=120)
+
+    plt.show()
+
+
+if __name__ == '__main__':
+    test()
