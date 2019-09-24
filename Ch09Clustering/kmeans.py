@@ -71,7 +71,7 @@ def test():
     用具体的数据进行测试
     :return:
     """
-    wine = datasets.load_wine()
+    wine = datasets.load_iris()
     X0 = wine.data
     (n, dim) = X0.shape
     X = X0[:, 0:2]

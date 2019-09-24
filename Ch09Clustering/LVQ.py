@@ -4,8 +4,8 @@ import random
 import matplotlib.pyplot as plt
 
 from sklearn import datasets
-from scipy.spatial import Voronoi
-from Tools.VoronoiPlot import voronoi_plot_2d
+# from scipy.spatial import Voronoi
+# from Tools.VoronoiPlot import voronoi_plot_2d
 
 
 class LVQ:
@@ -78,14 +78,33 @@ def test():
 
     colors = ['b', 'g', 'r', 'c']
 
-    vol = Voronoi(centers)
-    fig = voronoi_plot_2d(vol, data_points=X)
-
     for i in range(0, n):
         plt.scatter(X[i, 0], X[i, 1], c=colors[y[i]])
 
     for i in range(0, k):
         plt.scatter(centers[i, 0], centers[i, 1], marker='+', c=colors[i], s=120)
+
+    if k == 3:
+        A1 = 2*(centers[1, 0] - centers[0, 0])
+        B1 = 2*(centers[1, 1] - centers[0, 1])
+        C1 = centers[1, 0]*centers[1, 0] + centers[1, 1]*centers[1, 1] - centers[0, 0]*centers[0, 0] - centers[0, 1]*centers[0, 1]
+        A2 = 2*(centers[2, 0] - centers[1, 0])
+        B2 = 2*(centers[2, 1] - centers[1, 1])
+        C2 = centers[2, 0]*centers[2, 0] + centers[2, 1]*centers[2, 1] - centers[1, 0]*centers[1, 0] - centers[1, 1]*centers[1, 1]
+
+        points = np.zeros((4, 2))
+        points[0, 0] = (C1*B2 - C2*B1) / (A1*B2 - A2*B1)
+        points[0, 1] = (A1*C2 - A2*C1) / (A1*B2 - A2*B1)
+
+        # points[1, :] = (centers[0, :] + centers[1, :]) / 2
+        # points[2, :] = (centers[0, :] + centers[2, :]) / 2
+        # points[3, :] = (centers[1, :] + centers[2, :]) / 2
+        points[1, :] = points[0, :] + ((centers[0, :] + centers[1, :]) / 2 - points[0, :]) * 2.5
+        points[2, :] = points[0, :] + ((centers[0, :] + centers[2, :]) / 2 - points[0, :]) * 2.5
+        points[3, :] = points[0, :] + ((centers[1, :] + centers[2, :]) / 2 - points[0, :]) * 2.5
+
+        for i in range(1, 4):
+            plt.plot([points[0, 0], points[i, 0]], [points[0, 1], points[i, 1]])
 
     plt.show()
 
