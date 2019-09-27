@@ -6,6 +6,8 @@ from Ch09Clustering import kmeans
 from sklearn import datasets
 from Tools import PreProcess
 from Ch10DimensionReduction import PCA
+from sklearn.cluster import spectral_clustering
+from sklearn.cluster import SpectralClustering
 
 
 class SpectralCluster:
@@ -35,6 +37,8 @@ class SpectralCluster:
             for j in range(0, n):
                 d = np.linalg.norm(X[i, :] - X[j, :])
                 W[i, j] = np.exp(-d * d / (2 * delta * delta))
+            W[i, i] = 0
+        np.savetxt('F:\\W.csv', W, fmt='%f', delimiter=',')
         return W
 
     def laplacian_matrix(self, X, delta=1.0):
@@ -51,6 +55,7 @@ class SpectralCluster:
             D[i, i] = np.sum(W[i, :])
 
         L = D - W
+        np.savetxt('F:\\L.csv', L, fmt='%f', delimiter=',')
         return L
 
     def clustering(self, X, k, delta=1.0):
@@ -67,7 +72,10 @@ class SpectralCluster:
         idx = eg_values.argsort()
         eg_vectors = eg_vectors[:, idx]
 
+        print(eg_values)
+
         U = eg_vectors[:, 0:k]
+        np.savetxt('F:\\U.csv', U, fmt='%f', delimiter=',')
         k_means = kmeans.K_means(U, k)
         label = k_means.fit_transform()
 
@@ -84,7 +92,7 @@ def test():
     # X = wine.data
     # label_true = wine.target
 
-    read_path = 'F:\\result2019-2\\result0812\\datasets\\digits5_8\\'
+    read_path = 'F:\\result2019-2\\result0812\\datasets\\Wine\\'
     data_reader = np.loadtxt(read_path+'data.csv', dtype=np.str, delimiter=',')
     label_reader = np.loadtxt(read_path+'label.csv', dtype=np.str, delimiter=',')
     X = data_reader[:, :].astype(np.float)
@@ -93,7 +101,7 @@ def test():
     X = PreProcess.normalize(X)
     (n, dim) = X.shape
     k = 3
-    delta = 0.07
+    delta = 0.5
 
     spectral_cluster = SpectralCluster(X, k, delta=delta)
     label = spectral_cluster.fit_transform()
@@ -108,8 +116,70 @@ def test():
     plt.show()
 
 
+def sklearn_test():
+    """
+    用sklearn中的谱聚类方法实验
+    :return:
+    """
+    # wine = datasets.load_iris()
+    # X = wine.data
+    # label_true = wine.target
+
+    read_path = 'F:\\result2019-2\\result0812\\datasets\\digits5_8\\'
+    data_reader = np.loadtxt(read_path + 'data.csv', dtype=np.str, delimiter=',')
+    label_reader = np.loadtxt(read_path + 'label.csv', dtype=np.str, delimiter=',')
+    X = data_reader[:, :].astype(np.float)
+    label_true = label_reader.astype(np.int)
+
+    X = PreProcess.normalize(X)
+    (n, dim) = X.shape
+    k = 5
+    delta = 1.0
+
+    affinity = SpectralCluster.gauss_similar(None, X=X, delta=delta)
+    label = spectral_clustering(affinity, n_clusters=k)
+
+    pca = PCA.PCA(X, 2)
+    Y = pca.fit_transform()
+
+    colors = ['c', 'm', 'y', 'b', 'r', 'g']
+    shapes = ['s', 'o', '^', 'p', '+', '*']
+    for i in range(0, n):
+        plt.scatter(Y[i, 0], Y[i, 1], c=colors[int(label[i])], marker=shapes[int(label_true[i])])
+
+    plt.show()
+
+
+def sklearn_test2():
+    read_path = 'F:\\result2019-2\\result0812\\datasets\\Wine\\'
+    data_reader = np.loadtxt(read_path + 'data.csv', dtype=np.str, delimiter=',')
+    label_reader = np.loadtxt(read_path + 'label.csv', dtype=np.str, delimiter=',')
+    X = data_reader[:, :].astype(np.float)
+    label_true = label_reader.astype(np.int)
+
+    X = PreProcess.normalize(X)
+    (n, dim) = X.shape
+    k = 3
+    delta = 1.0
+
+    sc = SpectralClustering(n_clusters=k)
+    sc.fit(X)
+    label = sc.labels_
+
+    pca = PCA.PCA(X, 2)
+    Y = pca.fit_transform()
+
+    colors = ['c', 'm', 'y', 'b', 'r', 'g']
+    shapes = ['s', 'o', '^', 'p', '+', '*']
+    for i in range(0, n):
+        plt.scatter(Y[i, 0], Y[i, 1], c=colors[int(label[i])], marker=shapes[int(label_true[i])])
+
+    plt.show()
+
+
 if __name__ == '__main__':
     test()
+    # sklearn_test2()
 
 
 

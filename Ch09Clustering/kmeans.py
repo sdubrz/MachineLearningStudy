@@ -9,6 +9,8 @@ from Tools import ConvexHull
 
 class K_means:
 
+    MAX_LOOP = 3000  # 最大的循环次数
+
     def __init__(self, X, k):
         """
         初始化方法
@@ -54,9 +56,13 @@ class K_means:
                 center[i, :] = center_sum[i, :] / center_count[i]
 
             self.loop_time += 1
+            if self.loop_time > self.MAX_LOOP:
+                print('k-means:\t已达到最大的迭代次数')
+                break
 
         self.center_points = center
         self.label = label
+        print('k-means:\t迭代的总次数是 ', self.loop_time)
 
     def fit_transform(self):
         self.run(self.X, self.k)
