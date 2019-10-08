@@ -38,7 +38,7 @@ class SpectralCluster:
                 d = np.linalg.norm(X[i, :] - X[j, :])
                 W[i, j] = np.exp(-d * d / (2 * delta * delta))
             W[i, i] = 0
-        np.savetxt('F:\\W.csv', W, fmt='%f', delimiter=',')
+        np.savetxt('E:\\Project\\MachineLearning\\spectralClustering\\W.csv', W, fmt='%f', delimiter=',')
         return W
 
     def laplacian_matrix(self, X, delta=1.0):
@@ -55,7 +55,7 @@ class SpectralCluster:
             D[i, i] = np.sum(W[i, :])
 
         L = D - W
-        np.savetxt('F:\\L.csv', L, fmt='%f', delimiter=',')
+        np.savetxt('E:\\Project\\MachineLearning\\spectralClustering\\L.csv', L, fmt='%f', delimiter=',')
         return L
 
     def clustering(self, X, k, delta=1.0):
@@ -75,7 +75,8 @@ class SpectralCluster:
         print(eg_values)
 
         U = eg_vectors[:, 0:k]
-        np.savetxt('F:\\U.csv', U, fmt='%f', delimiter=',')
+        # U = eg_vectors[:, dim-k:dim]  # 一个实验，是不对的
+        np.savetxt('E:\\Project\\MachineLearning\\spectralClustering\\U.csv', U, fmt='%f', delimiter=',')
         k_means = kmeans.K_means(U, k)
         label = k_means.fit_transform()
 
@@ -92,7 +93,7 @@ def test():
     # X = wine.data
     # label_true = wine.target
 
-    read_path = 'F:\\result2019-2\\result0812\\datasets\\Wine\\'
+    read_path = 'E:\\Project\\MachineLearning\\datasets\\Wine\\'
     data_reader = np.loadtxt(read_path+'data.csv', dtype=np.str, delimiter=',')
     label_reader = np.loadtxt(read_path+'label.csv', dtype=np.str, delimiter=',')
     X = data_reader[:, :].astype(np.float)
