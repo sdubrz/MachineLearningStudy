@@ -5,6 +5,13 @@ from Ch09Clustering.kmeans import K_means
 from Ch10DimensionReduction import PCA
 from Tools import PreProcess
 import matplotlib.pyplot as plt
+from sklearn.manifold import TSNE
+
+
+"""
+    目前这个程序可以比较正确地进行聚类，但是需要调查不同形式的拉普拉斯矩阵应该选择哪些特征向量
+    2019年10月9日
+"""
 
 
 def similar(data, i, j):
@@ -68,7 +75,7 @@ def spectral_cluster(data, n_cluster=3, n_nbrs=15, save_path=None):
     np.savetxt(save_path+"eigenvectors.csv", eigen_vectors, fmt='%f', delimiter=',')
     np.savetxt(save_path+"eigenvalues.csv", eigen_values[idx], fmt='%f', delimiter=',')
 
-    eigen_data = eigen_vectors[:, 0:n_cluster]
+    eigen_data = eigen_vectors[:, n-n_cluster:n]
     np.savetxt(save_path+"eigendata.csv", eigen_data, fmt='%f', delimiter=',')
     kmeans = K_means(eigen_data, n_cluster)
     label = kmeans.fit_transform()
@@ -78,7 +85,7 @@ def spectral_cluster(data, n_cluster=3, n_nbrs=15, save_path=None):
 
 def run_test():
     main_path = 'E:\\Project\\result2019\\TPCA1008\\'
-    data_name = 'digits5_8'
+    data_name = 'Iris'
     read_path = main_path + "datasets\\" + data_name + "\\"
     data_reader = np.loadtxt(read_path + 'data.csv', dtype=np.str, delimiter=',')
     label_reader = np.loadtxt(read_path + 'label.csv', dtype=np.str, delimiter=',')
@@ -87,16 +94,16 @@ def run_test():
 
     X = PreProcess.normalize(X)
     (n, dim) = X.shape
-    n_clusters = 5
-    n_nbrs = 30
+    n_clusters = 3
+    n_nbrs = 15
 
     save_path = main_path + "spectralCluster\\" + data_name + "\\"
     PreProcess.check_filepath(save_path)
 
     label = spectral_cluster(X, n_clusters, n_nbrs, save_path=save_path)
 
-    pca = PCA.PCA(X, 2)
-    Y = pca.fit_transform()
+    tsne = TSNE(n_components=2, perplexity=30.0)
+    Y = tsne.fit_transform(X)
 
     colors = ['c', 'm', 'y', 'b', 'r', 'g']
     shapes = ['s', 'o', '^', 'p', '+', '*']

@@ -11,7 +11,7 @@ from sklearn.cluster import SpectralClustering
 
 
 class SpectralCluster:
-    def __init__(self, X, k, delta=1.0):
+    def __init__(self, X, k, delta=1.0, path=None):
         """
 
         :param X: 数据矩阵，每一行是一个样本
@@ -22,6 +22,7 @@ class SpectralCluster:
         (n, dim) = X.shape
         self.delta = delta
         self.label = np.zeros((n, 1))
+        self.save_path = path
 
     def gauss_similar(self, X, delta=1.0):
         """
@@ -75,8 +76,9 @@ class SpectralCluster:
         print(eg_values)
 
         U = eg_vectors[:, 0:k]
-        # U = eg_vectors[:, dim-k:dim]  # 一个实验，是不对的
+        # U = eg_vectors[:, n-k:n]  # 一个实验
         np.savetxt('E:\\Project\\MachineLearning\\spectralClustering\\U.csv', U, fmt='%f', delimiter=',')
+        np.savetxt('E:\\Project\\MachineLearning\\spectralClustering\\eigenvectors.csv', eg_vectors, fmt='%f', delimiter=',')
         k_means = kmeans.K_means(U, k)
         label = k_means.fit_transform()
 
@@ -93,7 +95,9 @@ def test():
     # X = wine.data
     # label_true = wine.target
 
-    read_path = 'E:\\Project\\MachineLearning\\datasets\\Wine\\'
+    main_path = 'E:\\Project\\result2019\\TPCA1008\\'
+    data_name = 'Wine'
+    read_path = main_path + "datasets\\" + data_name + "\\"
     data_reader = np.loadtxt(read_path+'data.csv', dtype=np.str, delimiter=',')
     label_reader = np.loadtxt(read_path+'label.csv', dtype=np.str, delimiter=',')
     X = data_reader[:, :].astype(np.float)
@@ -126,7 +130,9 @@ def sklearn_test():
     # X = wine.data
     # label_true = wine.target
 
-    read_path = 'F:\\result2019-2\\result0812\\datasets\\digits5_8\\'
+    main_path = 'E:\\Project\\result2019\\TPCA1008\\'
+    data_name = 'digits5_8'
+    read_path = main_path + "datasets\\" + data_name + "\\"
     data_reader = np.loadtxt(read_path + 'data.csv', dtype=np.str, delimiter=',')
     label_reader = np.loadtxt(read_path + 'label.csv', dtype=np.str, delimiter=',')
     X = data_reader[:, :].astype(np.float)
