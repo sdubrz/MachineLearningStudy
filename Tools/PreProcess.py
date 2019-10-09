@@ -1,5 +1,6 @@
 # 用于部分数据的预处理
 import numpy as np
+import os
 
 
 def standardize_array(array):
@@ -30,3 +31,17 @@ def normalize(X, low=-1.0, up=1.0):
 
     return Y
 
+
+def check_filepath(path):
+    """
+    通过向一个路径下存放一个很小的文件来检查该文件夹是否存在
+    避免出现存储结果时报错，以至于浪费时间的情况
+    :param path: 要检查的文件路径
+    :return:
+    """
+    if not os.path.exists(path):
+        os.makedirs(path)
+    data = np.array([[1, 2, 3],
+                     [4, 5, 6],
+                     [7, 8, 9]])
+    np.savetxt(path + "check_path.csv", data, fmt="%d", delimiter=",")
