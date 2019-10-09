@@ -10,6 +10,11 @@ from sklearn.cluster import spectral_clustering
 from sklearn.cluster import SpectralClustering
 
 
+"""
+    之前实验效果一直不好，经过检查，在计算 W 矩阵时，应该对其进行进一步的处理，使得 W 中每一行的和都为 1
+"""
+
+
 class SpectralCluster:
     def __init__(self, X, k, delta=1.0, path=None):
         """
@@ -38,8 +43,10 @@ class SpectralCluster:
             for j in range(0, n):
                 d = np.linalg.norm(X[i, :] - X[j, :])
                 W[i, j] = np.exp(-d * d / (2 * delta * delta))
+            s = np.sum(W[i, :])
+            W[i, :] = W[i, :] / s
             W[i, i] = 0
-        np.savetxt('E:\\Project\\MachineLearning\\spectralClustering\\W.csv', W, fmt='%f', delimiter=',')
+        # np.savetxt('E:\\Project\\MachineLearning\\spectralClustering\\W.csv', W, fmt='%f', delimiter=',')
         return W
 
     def laplacian_matrix(self, X, delta=1.0):
@@ -56,7 +63,7 @@ class SpectralCluster:
             D[i, i] = np.sum(W[i, :])
 
         L = D - W
-        np.savetxt('E:\\Project\\MachineLearning\\spectralClustering\\L.csv', L, fmt='%f', delimiter=',')
+        # np.savetxt('E:\\Project\\MachineLearning\\spectralClustering\\L.csv', L, fmt='%f', delimiter=',')
         return L
 
     def clustering(self, X, k, delta=1.0):
@@ -77,8 +84,8 @@ class SpectralCluster:
 
         U = eg_vectors[:, 0:k]
         # U = eg_vectors[:, n-k:n]  # 一个实验
-        np.savetxt('E:\\Project\\MachineLearning\\spectralClustering\\U.csv', U, fmt='%f', delimiter=',')
-        np.savetxt('E:\\Project\\MachineLearning\\spectralClustering\\eigenvectors.csv', eg_vectors, fmt='%f', delimiter=',')
+        # np.savetxt('E:\\Project\\MachineLearning\\spectralClustering\\U.csv', U, fmt='%f', delimiter=',')
+        # np.savetxt('E:\\Project\\MachineLearning\\spectralClustering\\eigenvectors.csv', eg_vectors, fmt='%f', delimiter=',')
         k_means = kmeans.K_means(U, k)
         label = k_means.fit_transform()
 
@@ -106,7 +113,7 @@ def test():
     X = PreProcess.normalize(X)
     (n, dim) = X.shape
     k = 3
-    delta = 0.5
+    delta = 1.0  # 这个方差的取值也很重要
 
     spectral_cluster = SpectralCluster(X, k, delta=delta)
     label = spectral_cluster.fit_transform()
